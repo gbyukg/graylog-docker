@@ -51,7 +51,7 @@ COPY config ${GRAYLOG_HOME}/data/config
 # final layer
 # use the smallest debian with headless openjdk and copying files from download layers
 # FROM openjdk:${JAVA_VERSION_MAJOR}-jre-slim-bullseye
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ARG VCS_REF
 ARG GRAYLOG_VERSION
