@@ -50,7 +50,8 @@ COPY config ${GRAYLOG_HOME}/data/config
 #
 # final layer
 # use the smallest debian with headless openjdk and copying files from download layers
-FROM openjdk:${JAVA_VERSION_MAJOR}-jre-slim-bullseye
+# FROM openjdk:${JAVA_VERSION_MAJOR}-jre-slim-bullseye
+FROM ubuntu:20.04
 
 ARG VCS_REF
 ARG GRAYLOG_VERSION
@@ -66,9 +67,14 @@ COPY --chown=${GRAYLOG_UID}:${GRAYLOG_GID} --from=graylog-downloader ${GRAYLOG_H
 
 WORKDIR ${GRAYLOG_HOME}
 
+RUN apt-get update && \
+        apt-get upgrade -y && \
+        apt-get install -y apt-transport-https openjdk-"${JAVA_VERSION_MAJOR}"-jre-headless uuid-runtime pwgen apt-utils
+
 # hadolint ignore=DL3027,DL3008
 RUN \
-  echo "export JAVA_HOME=/usr/local/openjdk-${JAVA_VERSION_MAJOR}"     > /etc/profile.d/graylog.sh && \
+  # echo "export JAVA_HOME=/usr/local/openjdk-${JAVA_VERSION_MAJOR}"     > /etc/profile.d/graylog.sh && \
+  echo "export JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION_MAJOR}-openjdk-arm64"     > /etc/profile.d/graylog.sh && \
   echo "export BUILD_DATE=${BUILD_DATE}"           >> /etc/profile.d/graylog.sh && \
   echo "export GRAYLOG_VERSION=${GRAYLOG_VERSION}" >> /etc/profile.d/graylog.sh && \
   echo "export GRAYLOG_SERVER_JAVA_OPTS='-Dlog4j2.formatMsgNoLookups=true -Djdk.tls.acknowledgeCloseNotify=true -XX:+UnlockExperimentalVMOptions -XX:NewRatio=1 -XX:MaxMetaspaceSize=256m -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow'" >> /etc/profile.d/graylog.sh && \
@@ -77,7 +83,7 @@ RUN \
   echo "export GRAYLOG_GROUP=${GRAYLOG_GROUP}"     >> /etc/profile.d/graylog.sh && \
   echo "export GRAYLOG_UID=${GRAYLOG_UID}"         >> /etc/profile.d/graylog.sh && \
   echo "export GRAYLOG_GID=${GRAYLOG_GID}"         >> /etc/profile.d/graylog.sh && \
-  echo "export PATH=${GRAYLOG_HOME}/bin:${PATH}"   >> /etc/profile.d/graylog.sh && \
+  echo "export PATH=${GRAYLOG_HOME}/jre/bin:${PATH}"   >> /etc/profile.d/graylog.sh && \
   apt-get update  > /dev/null && \
   apt-get install --no-install-recommends --assume-yes \
     curl \
@@ -89,7 +95,7 @@ RUN \
     wait-for-it \
     fonts-dejavu \
     fontconfig > /dev/null && \
-  addgroup \
+    addgroup \
     --gid "${GRAYLOG_GID}" \
     --quiet \
     "${GRAYLOG_GROUP}" && \
@@ -102,7 +108,7 @@ RUN \
     --gid "${GRAYLOG_GID}" \
     --quiet \
     "${GRAYLOG_USER}" && \
-  setcap 'cap_net_bind_service=+ep' "${JAVA_HOME}/bin/java" && \
+  # setcap 'cap_net_bind_service=+ep' "${JAVA_HOME}/bin/java" && \
   apt-get remove --assume-yes --purge \
     apt-utils > /dev/null && \
   rm -f /etc/apt/sources.list.d/* && \
