@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-slim-bullseye
+FROM openjdk:11-jre-slim-bullseye
 
 ARG VCS_REF
 ARG BUILD_DATE
